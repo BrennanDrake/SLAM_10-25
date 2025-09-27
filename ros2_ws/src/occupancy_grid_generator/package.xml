@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<?package format="2"?>
+<package>
+  <name>occupancy_grid_generator</name>
+  <version>1.0.0</version>
+  <description>Phase 1 SLAM package: generates occupancy grids from LiDAR scan data</description>
+  
+  <maintainer email="brennan.drake@comcast.net">Brennan Drake</maintainer>
+  <license>Apache-2.0</license>
+  <url type="website">https://BrennanDrake.github.io</url>
+  <url type="repository">https://github.com/BrennanDrake/SLAM_10-25</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Core ROS 2 dependencies -->
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclcpp_components</build_depend>
+  <run_depend>rclcpp</run_depend>
+  <run_depend>rclcpp_components</run_depend>
+  
+  <!-- Message types -->
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>nav_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>tf2_ros</run_depend>
+  <run_depend>tf2_geometry_msgs</run_depend>
+  
+  <!-- Utilities -->
+  <build_depend>std_msgs</build_depend>
+  <build_depend>builtin_interfaces</build_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>builtin_interfaces</run_depend>
+
+  <!-- Testing -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -28,6 +28,14 @@ ros:
       maintainers:
         - name: "Brennan Drake"
           email: "brennan.drake@comcast.net"
+    - name: "occupancy_grid_generator"
+      build_type: "ament_cmake"
+      dependencies:
+        build: ["rclcpp", "rclcpp_components", "sensor_msgs", "nav_msgs", "geometry_msgs", "tf2", "tf2_ros", "tf2_geometry_msgs", "std_msgs", "builtin_interfaces"]
+        exec:  ["rclcpp", "rclcpp_components", "sensor_msgs", "nav_msgs", "geometry_msgs", "tf2", "tf2_ros", "tf2_geometry_msgs", "std_msgs", "builtin_interfaces"]
+      maintainers:
+        - name: "Brennan Drake"
+          email: "brennan.drake@comcast.net"
 
 security_policy:
   # Trusted orgs for VCS imports. Keep small and explicit.

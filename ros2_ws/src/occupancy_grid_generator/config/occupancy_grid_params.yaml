@@ -1,0 +1,21 @@
+occupancy_grid_generator:
+  ros__parameters:
+    # Grid configuration
+    resolution: 0.05          # meters per pixel (5cm resolution)
+    grid_width: 2000          # grid width in cells (100m at 5cm resolution)
+    grid_height: 2000         # grid height in cells (100m at 5cm resolution)
+    origin_x: -50.0           # grid origin x in world coordinates (centers the grid)
+    origin_y: -50.0           # grid origin y in world coordinates (centers the grid)
+    
+    # Frame configuration
+    map_frame: "map"          # frame for the occupancy grid
+    base_frame: "base_link"   # robot base frame
+    
+    # Occupancy probability parameters
+    prob_hit: 0.7             # probability of cell being occupied when hit by laser
+    prob_miss: 0.4            # probability of cell being free when missed by laser
+    prob_prior: 0.5           # prior probability of occupancy (unknown cells)
+    
+    # Occupancy grid thresholds (0-100 scale)
+    occupied_threshold: 65    # threshold for marking cell as occupied
+    free_threshold: 25        # threshold for marking cell as free
