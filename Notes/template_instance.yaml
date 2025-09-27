@@ -34,7 +34,6 @@ security_policy:
   trusted_vcs_orgs:
     - "ros2"
     - "ros-planning"
-    - "your-org"
   allow_vcs_import: false     # prefer validate-only unless explicitly needed
   block_system_edits: true    # belt-and-suspenders; do not modify /opt/ros/**
   block_risky_commands: true  # ensures curl|bash, sudo apt install, destructive git remain gated
@@ -71,7 +70,6 @@ checklist:
   - "Run initialization script: bash scripts/init.sh --ros-distro jazzy"
   - "Initialize rosdep: sudo rosdep init || true; rosdep update"
   - "Move rules: ros_rules.md -> .windsurf/rules/ros_rules.md; general_rules.md -> .windsurf/rules/general_rules.md"
-  - "Review allow_deny.yaml; set trusted orgs; ensure /opt/ros/** is blocked"
   - "Create first package in ros2_ws/src"
   - "Run colcon list; then colcon build --mixin release"
   - "Run ros2 doctor --report and a demo talker/listener"
