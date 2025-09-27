@@ -1,0 +1,20 @@
+# Project-level ignores
+.direnv/
+
+# ROS 2 / colcon build artifacts (top-level)
+build/
+install/
+log/
+
+# ROS 2 / colcon build artifacts (workspace-scoped)
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# ROS / colcon caches
+**/.colcon/**
+**/.ros/**
+
+# Python caches (common when using ament_python)
+__pycache__/
+*.pyc

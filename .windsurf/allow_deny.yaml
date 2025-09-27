@@ -1,0 +1,103 @@
+allow:
+  - "src/**/*.py"
+  - "frontend/**/*.js"
+  - "frontend/**/*.ts"
+  - "frontend/**/*.jsx"
+  - "frontend/**/*.tsx"
+  - "templates/**/*.html"
+  - "static/**/*.css"
+  - "static/**/*.scss"
+  # Project-specific additions
+  - "web/**"
+  - "web/src/**/*.ts"
+  - "web/src/**/*.tsx"
+  - "web/public/**"
+  - "app/src/resources/**/*.docx"
+    # Allow PowerShell file copy inside project (adjust paths/patterns to your policy)
+  - name: copy-templates
+    match:
+      command: '^Copy-Item\\b'
+      cwd: '.*windsurf-project$'
+      # Optional: constrain sources and destinations
+      argsRegex: 'app\\\\src\\\\resources\\\\.*\\.docx|web\\\\public\\\\templates\\\\.*\\.docx'
+
+  # ROS 2 workspace source
+  - "ros2_ws/src/**"
+  - "**/*.launch.py"
+  - "**/*.repos"
+  - "**/*.msg"
+  - "**/*.srv"
+  - "**/*.action"
+  - "**/package.xml"
+  - "**/CMakeLists.txt"
+  - "**/*.yaml"
+  - "**/*.rviz"
+  - "**/*.world"
+  - "**/*.urdf"
+  - "**/*.xacro"
+  - "**/*.sdf"
+  - "**/*.gazebo"
+
+  # Safe, read-only ROS 2 commands (no sudo, workspace-scoped)
+  - name: ros2-help
+    match:
+      command: '^ros2\\b'
+      cwd: '.*/ros2_ws(/.*)?$'
+      argsRegex: '^(--help|help|doctor(\\s+--report)?|pkg\\s+list|topic\\s+list|node\\s+list|interface\\s+show\\b.*)$'
+
+  - name: colcon-list
+    match:
+      command: '^colcon\\b'
+      cwd: '.*/ros2_ws(/.*)?$'
+      argsRegex: '^(list|version)$'
+
+  - name: rosdep-status
+    match:
+      command: '^rosdep\\b'
+      cwd: '.*/ros2_ws(/.*)?$'
+      argsRegex: '^(check|keys|db|resolve\\b.*)$'
+
+  - name: vcs-validate-only
+    match:
+      command: '^vcs\\b'
+      cwd: '.*/ros2_ws(/.*)?$'
+      # Validate-only by default; restrict to HTTPS on common forges
+      argsRegex: '^validate\\b.*(https://(github\\.com|gitlab\\.com|bitbucket\\.org)/.*\\.repos).*'
+deny:
+  - "venv/**"
+  - "env/**"
+  - "node_modules/**"
+  - "dist/**"
+  - "build/**"
+  - "*.pyc"
+  - "__pycache__/**"
+  - ".DS_Store"
+  - "Thumbs.db"
+  - "*.log"
+  - ".env"
+  - "config/secrets/**"
+  - "private/**"
+  - "*.min.js"
+  - "*.min.css"
+  - "coverage/**"
+  - "reports/**"
+  
+  # ROS 2 build artifacts
+  - "ros2_ws/build/**"
+  - "ros2_ws/install/**"
+  - "ros2_ws/log/**"
+  - "**/.colcon/**"
+  - "**/.ros/**"
+  - "**/.cache/rosdep/**"
+  - "**/.venv/**"
+  - "/opt/ros/**"
+  
+  # Never auto-run downloads piped to shells
+  - pattern: 'curl\\s+.*\\|\\s*(sh|bash)'
+  - pattern: 'wget\\s+.*\\|\\s*(sh|bash)'
+
+  # Block auto sudo installs by default
+  - pattern: '^sudo\\s+apt\\s+(install|remove|purge)\\b.*'
+
+  # Disallow destructive git ops auto-run
+  - pattern: '^git\\s+(reset|clean|checkout)\\b.*(--hard|--force)'

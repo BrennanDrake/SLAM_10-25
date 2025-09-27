@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>template_pkg</name>
+  <version>0.0.1</version>
+  <description>Template ROS 2 package (ament_cmake) providing a sample talker node.</description>
+
+  <maintainer email="brennan.drake@comcast.net">Brennan Drake</maintainer>
+  <license>Apache-2.0</license>
+
+  <url type="website"></url>
+  <url type="repository"></url>
+  <url type="bugtracker"></url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

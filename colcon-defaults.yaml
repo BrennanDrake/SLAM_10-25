@@ -1,0 +1,6 @@
+# Repo-scoped colcon defaults; activated via .envrc
+# This sets the default build profile to 'release' automatically.
+# colcon reference: https://colcon.readthedocs.io/en/released/reference/environment.html#colcon-defaults-file
+build:
+  mixins:
+    - release

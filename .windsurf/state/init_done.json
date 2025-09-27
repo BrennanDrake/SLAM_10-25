@@ -1,0 +1,11 @@
+{
+  "initialized": true,
+  "ros_distro": "jazzy",
+  "project_root": "/home/brennan/Desktop/Dev/Template_Repo_10-25",
+  "created_utc": "2025-09-27T04:11:10Z",
+  "steps_run": {
+    "mixins": true,
+    "direnv_allow": true,
+    "build": false
+  }
+}

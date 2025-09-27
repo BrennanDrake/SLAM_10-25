@@ -1,0 +1,83 @@
+# Template Instance Configuration
+# Fill this out immediately after duplicating the template.
+# Keep this file updated as the project evolves.
+
+meta:
+  project_name: "SLAM_DEV"
+  short_description: "One-line description of the project"
+  owners:
+    - name: "Brennan Drake"
+      email: "brennan.drake@comcast.net"
+  repo_url: ""
+  license: "Apache-2.0"
+  created_utc: "2025-09-27T03:07:34Z"
+
+ros:
+  distro: "jazzy"
+  workspace_relpath: "ros2_ws"  # assumes ros2_ws/ inside project folder
+  rmw_implementation: "rmw_fastrtps_cpp"  # alternatives: rmw_zenoh_cpp, rmw_cyclonedds_cpp
+  mixins:
+    - "release"    # examples: debug, release, lto
+  packages:
+    # List packages you plan to create in ros2_ws/src
+    - name: "template_pkg"
+      build_type: "ament_cmake"   # or ament_python
+      dependencies:
+        build: ["rclcpp", "std_msgs"]
+        exec:  ["rclcpp", "std_msgs"]
+      maintainers:
+        - name: "Brennan Drake"
+          email: "brennan.drake@comcast.net"
+
+security_policy:
+  # Trusted orgs for VCS imports. Keep small and explicit.
+  trusted_vcs_orgs:
+    - "ros2"
+    - "ros-planning"
+    - "your-org"
+  allow_vcs_import: false     # prefer validate-only unless explicitly needed
+  block_system_edits: true    # belt-and-suspenders; do not modify /opt/ros/**
+  block_risky_commands: true  # ensures curl|bash, sudo apt install, destructive git remain gated
+
+windsurf:
+  # Confirm these match .windsurf/allow_deny.yaml after duplication
+  ros2_cwd_regex: ".*/ros2_ws(/.*)?$"
+  allow_safe_commands:
+    - ros2-help
+    - colcon-list
+    - rosdep-status
+    - vcs-validate-only
+  deny_globs:
+    - "ros2_ws/build/**"
+    - "ros2_ws/install/**"
+    - "ros2_ws/log/**"
+
+workflow:
+  # Paths you want to prioritize in development
+  key_paths:
+    - "ros2_ws/src/**"
+    - "**/*.launch.py"
+    - "**/package.xml"
+    - "**/CMakeLists.txt"
+    - "**/*.yaml"
+  ci:
+    enabled: false
+    provider: "github-actions"
+    badges: []
+
+checklist:
+  - "Verify ROS environment: source /opt/ros/jazzy/setup.bash"
+  - "Create workspace: mkdir -p ros2_ws/src"
+  - "Run initialization script: bash scripts/init.sh --ros-distro jazzy"
+  - "Initialize rosdep: sudo rosdep init || true; rosdep update"
+  - "Move rules: ros_rules.md -> .windsurf/rules/ros_rules.md; general_rules.md -> .windsurf/rules/general_rules.md"
+  - "Review allow_deny.yaml; set trusted orgs; ensure /opt/ros/** is blocked"
+  - "Create first package in ros2_ws/src"
+  - "Run colcon list; then colcon build --mixin release"
+  - "Run ros2 doctor --report and a demo talker/listener"
+
+prompts:
+  # Use these prompts to keep this file and README updated
+  - "Cascade: Review template_instance.yaml and Notes/README.md. Suggest updates based on new packages, dependencies, and launch/param changes. Apply safe edits."
+  - "Cascade: After any dependency change, validate allow_deny.yaml aligns with current trusted orgs and blocked patterns."
+  - "Cascade: Ensure package.xml metadata (license, maintainer, repository URL) is complete for each package."

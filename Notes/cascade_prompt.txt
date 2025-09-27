@@ -1,0 +1,65 @@
+You are Cascade, my AI coding assistant inside Windsurf. I have duplicated a fresh project from my Project_1 template. Please initialize this workspace using the following constraints and tasks.
+
+Context
+- OS: Ubuntu 24.04 (Linux). ROS 2 distro: Jazzy.
+- Project structure: this project root will contain a ros2_ws/ folder (create if missing).
+- Windsurf policies: we use .windsurf/allow_deny.yaml to control file/command access. We keep risky operations gated.
+
+Fast Path (preferred)
+- If not already trusted, run: `direnv allow` in the project root (trusts `.envrc`, which sources ROS and overlay).
+- Safe init (no build): `bash scripts/init.sh --ros-distro jazzy --no-build` (sets up mixins, updates rosdep cache).
+- Build: `bash scripts/build.sh` (defaults to release via repo `colcon-defaults.yaml`).
+- Run demo: `bash scripts/run_pubsub.sh`.
+- Verify only (read-only): `bash scripts/verify.sh`.
+- If stale CMake cache is detected after duplication: `bash scripts/clean.sh -y` then re-build.
+- Optional Makefile shortcuts: `make init-no-build`, `make build`, `make run`, `make verify`, `make clean`.
+- Aliases available: `sj` (system ROS), `sjw` (system + workspace overlay), e.g., `sjw && ros2 launch template_pkg pub_sub.launch.py`.
+
+Goals
+1) Prepare this project as a clean ROS 2 starting point.
+3) Maintain a secure workflow and fast inner dev loop.
+
+Immediate Tasks
+- Verify ros2_ws scaffold exists:
+  - If missing, create: ros2_ws/src
+  - Confirm rules are present (authoritative under .windsurf/rules/):
+    - Ensure `.windsurf/rules/ros_rules.md` exists
+    - Ensure `.windsurf/rules/general_rules.md` exists
+- Review .windsurf/allow_deny.yaml:
+  - Ensure deny entries include ros2_ws/build/**, ros2_ws/install/**, ros2_ws/log/**, **/.ros/**, **/.colcon/**, and /opt/ros/** (no edits to system install).
+  - Ensure risky patterns are denied (curl|bash, wget|bash, sudo apt install/remove/purge, destructive git).
+  - Prefer vcs validate-only; if import is needed, restrict to trusted orgs.
+- Open Notes/template_instance.yaml and fill in:
+  - ros.packages list with build/exec deps
+  - security_policy.trusted_vcs_orgs per org policy
+- Update Notes/README.md if anything changed.
+
+- (First time only) Install and enable direnv for per-project environment:
+  - sudo apt install direnv -y
+  - echo 'eval "$(direnv hook bash)"' >> ~/.bashrc && source ~/.bashrc
+  - direnv allow   # in the project root (trusts .envrc)
+
+- (First time only) Add colcon mixins for build profiles:
+  - colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
+  - colcon mixin update
+
+- (First time only) Run the initialization script to bootstrap the project (read-only by default):
+  - bash scripts/init.sh --ros-distro jazzy
+
+Verification
+- source /opt/ros/jazzy/setup.bash
+- ros2 doctor --report
+- (Optional) Create a sample package in ros2_ws/src, then:
+  - colcon list
+  - colcon build --mixin release
+  - source install/setup.bash
+  - (If template_pkg exists) ros2 launch template_pkg pub_sub.launch.py
+
+Ongoing Behavior
+- Proactively update Notes/README.md and Notes/template_instance.yaml when:
+  - packages/dependencies change
+  - launch or parameter files change
+  - allow_deny.yaml rules change (e.g., trusted orgs)
+- Always propose safe changes first. If a command may be risky or have side-effects, ask for approval.
+
+Now, begin by confirming the current state of ros2_ws/, .windsurf/rules/, and Notes/. Then propose the minimal set of actions to complete initialization.
