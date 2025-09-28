@@ -155,16 +155,16 @@ Pose2D ScanMatcher::optimizePose(const std::vector<Point2D>& points,
     buildOptimizationMatrices(transformed_points, grid, current_pose, hessian, gradient);
     
     // Step 3: Solve the linear system H * delta_pose = gradient
-    // Check if Hessian is invertible
-    if (hessian.determinant() < 1e-6) {
-        // Hessian is singular, return current pose
+    // Check if Hessian is invertible (and has meaningful information)
+    double det = hessian.determinant();
+    if (std::abs(det) < 1e-6 || hessian.norm() < 1e-6) {
+        // Hessian is singular or too small - no useful gradient information
+        // This happens when the map is mostly unknown
         return current_pose;
     }
     
-    // YOUR TASK: Solve for pose update
     // Gauss-Newton update: delta_pose = -H^(-1) * gradient
     // The negative sign is because we're minimizing the error
-    
     Eigen::Vector3d delta_pose = -hessian.inverse() * gradient;
     
     // Step 4: Apply pose update

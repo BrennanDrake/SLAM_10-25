@@ -19,7 +19,9 @@
 
 // Direct includes with full paths to avoid nested directory issues
 #include "/opt/ros/jazzy/include/tf2/tf2/buffer_core.hpp"
-#include "/opt/ros/jazzy/include/tf2_ros/tf2_ros/transform_listener.hpp"
+#include "tf2_ros/tf2_ros/buffer.h"
+#include "tf2_ros/tf2_ros/transform_listener.h"
+#include "tf2/time.h"
 #include "/opt/ros/jazzy/include/tf2_ros/tf2_ros/buffer.hpp"
 #include "/opt/ros/jazzy/include/tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
@@ -49,14 +51,13 @@ namespace tf2_compat {
 class Buffer {
 public:
     explicit Buffer(rclcpp::Clock::SharedPtr clock, 
-                   const rclcpp::Duration& cache_time = rclcpp::Duration::from_nanoseconds(10000000000ULL))
-        : buffer_(clock, cache_time) {}
+                   const rclcpp::Duration& cache_time = rclcpp::Duration(10, 0))
+        : buffer_(clock, tf2::durationFromSec(cache_time.seconds())) {}
 
     /**
      * @brief Look up transform between two frames
      * @param target_frame Target coordinate frame
      * @param source_frame Source coordinate frame  
-     * @param time Time at which to get the transform
      * @return Transform from source to target frame
      */
     geometry_msgs::msg::TransformStamped lookupTransform(

@@ -18,12 +18,24 @@
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
-#include "tf2_ros/transform_broadcaster.hpp"
-#include "tf2_ros/buffer.hpp"
-#include "tf2_ros/transform_listener.hpp"
 
-// Include our TF2 compatibility layer
-#include "hector_slam_custom/tf2_compatibility.hpp"
+// Include native TF2 headers for Jazzy
+// The weird double directory is ONLY for the include path, not the namespace
+#ifdef ROS_JAZZY_TF2_WORKAROUND
+  // Jazzy has this weird double directory structure
+  #include "tf2_ros/tf2_ros/buffer.h"
+  #include "tf2_ros/tf2_ros/transform_listener.h"
+  #include "tf2_ros/tf2_ros/transform_broadcaster.h"
+  #include "tf2/time.h"
+#else
+  // Normal ROS 2 includes (for other distros)
+  #include "tf2_ros/buffer.h"
+  #include "tf2_ros/transform_listener.h"
+  #include "tf2_ros/transform_broadcaster.h"
+  #include "tf2/time.h"
+#endif
+
+// Include our SLAM components
 #include "hector_slam_custom/scan_matcher.hpp"
 #include "hector_slam_custom/map_manager.hpp"
 
@@ -84,9 +96,9 @@ private:
     rclcpp::TimerBase::SharedPtr map_publish_timer_;
     rclcpp::TimerBase::SharedPtr pose_publish_timer_;
 
-    // TF2 components
-    std::unique_ptr<tf2_compat::Buffer> tf_buffer_;
-    std::unique_ptr<tf2_compat::TransformListener> tf_listener_;
+    // TF2 components (using native Jazzy types)
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     // =============================================================================
@@ -141,7 +153,7 @@ private:
     
     // Map parameters
     double map_resolution_;
-    int map_size_;
+    double map_size_;
     double map_update_distance_threshold_;
     double map_update_angle_threshold_;
     

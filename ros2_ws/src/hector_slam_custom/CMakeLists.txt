@@ -7,26 +7,22 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 # Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
 
 # Include directories
 include_directories(
-  include
   ${EIGEN3_INCLUDE_DIRS}
 )
 
@@ -38,6 +34,8 @@ endif()
 # Create library (only with implemented files)
 add_library(${PROJECT_NAME}_lib
   src/scan_matcher.cpp
+  src/map_manager.cpp
+  src/hector_slam_processor.cpp
 )
 
 target_include_directories(${PROJECT_NAME}_lib PUBLIC
@@ -50,39 +48,53 @@ ament_target_dependencies(${PROJECT_NAME}_lib
   sensor_msgs
   nav_msgs
   geometry_msgs
+  tf2
   tf2_ros
   tf2_geometry_msgs
   Eigen3
 )
 
-# Create executable for Hector SLAM node (commented out until we implement the main node)
-# add_executable(${PROJECT_NAME}_node
-#   src/hector_slam_node.cpp
-# )
-# 
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${PROJECT_NAME}_lib
-# )
-# 
-# ament_target_dependencies(${PROJECT_NAME}_node
-#   rclcpp
-# )
+# Create executable for Hector SLAM node
+add_executable(${PROJECT_NAME}_node
+  src/hector_slam_node.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_node
+  ${PROJECT_NAME}_lib
+)
+
+ament_target_dependencies(${PROJECT_NAME}_node
+  rclcpp
+)
+
+# Create static scan publisher for testing
+add_executable(static_scan_publisher
+  src/static_scan_publisher.cpp
+)
+
+ament_target_dependencies(static_scan_publisher
+  rclcpp
+  sensor_msgs
+  geometry_msgs
+  tf2_ros
+  tf2
+)
 
 # Create component library for composition (commented out until we implement HectorSlamProcessor)
-# rclcpp_components_register_nodes(${PROJECT_NAME}_lib "hector_slam_custom::HectorSlamProcessor")
 
 # Install targets
 install(TARGETS
   ${PROJECT_NAME}_lib
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
 )
 
-# install(TARGETS
-#   hector_slam_node
-#   DESTINATION lib/${PROJECT_NAME}
-# )
+# Install executables
+install(TARGETS
+  ${PROJECT_NAME}_node
+  static_scan_publisher
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Install headers
 install(DIRECTORY
@@ -94,6 +106,13 @@ install(DIRECTORY
 install(DIRECTORY
   launch/
   DESTINATION share/${PROJECT_NAME}/
+)
+
+# Install Python scripts
+install(PROGRAMS
+  scripts/monitor_slam.py
+  scripts/test_slam.sh
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # Install config files
