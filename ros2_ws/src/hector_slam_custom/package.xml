@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypeset="xml" ?>
+<package format="3">
+  <name>hector_slam_custom</name>
+  <version>0.1.0</version>
+  <description>Custom implementation of Hector SLAM algorithm for educational purposes</description>
+  <maintainer email="brennan@example.com">Brennan Drake</maintainer>
+  <license>MIT</license>
+
+  <author email="brennan@example.com">Brennan Drake</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Core ROS 2 dependencies -->
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  
+  <!-- Message types -->
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  
+  <!-- TF2 for coordinate transforms -->
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  
+  <!-- Eigen for linear algebra -->
+  <depend>eigen3_cmake_module</depend>
+  
+  <!-- Testing dependencies -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

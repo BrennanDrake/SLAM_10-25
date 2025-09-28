@@ -1,0 +1,73 @@
+I am working on a comprehensive SLAM (Simultaneous Localization and Mapping) research project. This is a multi-phase project progressing from basic occupancy grid mapping to advanced multi-sensor fusion.
+
+## Current Status
+
+### Phase 1: Basic Occupancy Grid Mapping - COMPLETED ✅
+- Implemented probabilistic occupancy grid with log-odds representation
+- Created ROS 2 nodes for grid generation and fake scan publishing
+- Bresenham line tracing for ray casting
+- Successfully tested with simulated data
+
+### Phase 2: Classical 2D SLAM (Hector SLAM) - IN PROGRESS 🔄
+#### Phase 2.1: Scan Matching Core - COMPLETED ✅
+- Implemented Gauss-Newton optimization algorithm
+- Jacobian computation for pose derivatives (translation & rotation)
+- Hessian matrix building and pose covariance estimation
+- Match score quality assessment
+- Successfully compiles with ROS 2 Jazzy
+
+#### Phase 2.2: Map Management - NEXT 🎯
+- Multi-resolution occupancy grids to implement
+- Integration with Phase 1 probabilistic mapping
+- Target: 1-2 sessions (~3-6 hours)
+
+## Project Structure
+```
+/home/brennan/Desktop/Dev/SLAM_10-25/
+├── ros2_ws/
+│   └── src/
+│       ├── occupancy_grid_generator/  # Phase 1 package
+│       └── hector_slam_custom/        # Phase 2 package
+├── Notes/
+│   ├── PROJECT_DESIGN.md             # Main design document
+│   └── cascade_slam_prompt.txt       # This file
+└── scripts/                          # Build and utility scripts
+```
+
+## Technical Context
+- **ROS 2 Distro**: Jazzy on Ubuntu 24.04
+- **TF2 Headers**: Require special handling (double directory structure in Jazzy)
+- **Dependencies**: Eigen3 for matrix operations, TF2 for transforms
+- **Algorithms**: Log-odds for numerical stability, Bresenham for ray tracing
+- **Build**: `colcon build --packages-select <package> --cmake-args -DBUILD_TESTING=OFF`
+
+## Hardware Platform
+- **Primary**: TurtleBot3 with custom LiDAR configuration
+- **Future Sensors**: Intel RealSense D455 (3D SLAM), PN5180 RFID reader (sensor fusion)
+
+## Session Guidelines
+- **Duration**: Target 1-3 sessions of <3 hours each per sub-phase
+- **Flexibility**: Can be shorter/longer with advance notice
+- **Focus**: Educational value and deep understanding over feature quantity
+- **Testing**: Integration testing preferred over isolated unit tests
+
+## Next Immediate Tasks (Phase 2.2)
+1. Implement MapManager source file (map_manager.cpp)
+2. Create OccupancyGridLevel class for single resolution grids
+3. Adapt Phase 1 log-odds and Bresenham algorithms
+4. Integrate multi-resolution framework
+5. Test with Phase 1 occupancy grid data
+
+## Key Implementation Files
+- `hector_slam_custom/include/hector_slam_custom/scan_matcher.hpp` - COMPLETED
+- `hector_slam_custom/src/scan_matcher.cpp` - COMPLETED
+- `hector_slam_custom/include/hector_slam_custom/map_manager.hpp` - Header done
+- `hector_slam_custom/src/map_manager.cpp` - TO IMPLEMENT
+
+## Important Notes
+- Scan matcher uses occupancy grid gradients, not feature extraction
+- Covariance = inverse of Hessian (information matrix)
+- Multi-resolution helps with both speed and convergence
+- Building custom implementation for learning, not using official Hector SLAM
+
+Please help me continue Phase 2.2: Map Management implementation, building on the completed scan matching core.

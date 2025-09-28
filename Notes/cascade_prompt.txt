@@ -20,30 +20,12 @@ Goals
 3) Maintain a secure workflow and fast inner dev loop.
 
 Immediate Tasks
-- Verify ros2_ws scaffold exists:
   - If missing, create: ros2_ws/src
   - Confirm rules are present (authoritative under .windsurf/rules/):
     - Ensure `.windsurf/rules/ros_rules.md` exists
     - Ensure `.windsurf/rules/general_rules.md` exists
 - Review .windsurf/allow_deny.yaml:
-  - Ensure deny entries include ros2_ws/build/**, ros2_ws/install/**, ros2_ws/log/**, **/.ros/**, **/.colcon/**, and /opt/ros/** (no edits to system install).
-  - Ensure risky patterns are denied (curl|bash, wget|bash, sudo apt install/remove/purge, destructive git).
-  - Prefer vcs validate-only; if import is needed, restrict to trusted orgs.
-- Open Notes/template_instance.yaml and fill in:
-  - ros.packages list with build/exec deps
-  - security_policy.trusted_vcs_orgs per org policy
-- Update Notes/README.md if anything changed.
-
-- (First time only) Install and enable direnv for per-project environment:
-  - sudo apt install direnv -y
-  - echo 'eval "$(direnv hook bash)"' >> ~/.bashrc && source ~/.bashrc
-  - direnv allow   # in the project root (trusts .envrc)
-
-- (First time only) Add colcon mixins for build profiles:
-  - colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
-  - colcon mixin update
-
-- (First time only) Run the initialization script to bootstrap the project (read-only by default):
+  - Ensure deny entries include ros2_ws/build/**, ros2_ws/install/**, ros2_ws/log/**, **/.ros/**, **/.colcon/**,
   - bash scripts/init.sh --ros-distro jazzy
 
 Verification

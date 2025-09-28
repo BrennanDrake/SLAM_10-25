@@ -2,23 +2,24 @@
 
 ## Project Overview
 
-**Project Name**: SLAM_DEV  
-**Owner**: Brennan Drake  
-**Purpose**: Research and implementation of various SLAM (Simultaneous Localization and Mapping) algorithms with focus on 2D LiDAR methods, expanding to visual and depth camera integration.
+**Project Name**: SLAM Project Design Document
 
-## Background & Motivation
+## Project Overview
+This document outlines the design and implementation of a comprehensive SLAM (Simultaneous Localization and Mapping) system, progressing from basic occupancy grid mapping to advanced multi-sensor fusion.
 
-This project represents a return to autonomous robotics and SLAM research, building upon previous undergraduate thesis work and research experience. The goal is to systematically explore and implement different SLAM methodologies, starting with proven 2D LiDAR approaches before advancing to multi-sensor fusion techniques.
+## Phase Structure
+**Session Constraint:** Each sub-phase should be completable in 1-3 sessions of <3 hours each
 
-**Reference Materials**: 
-- Portfolio and undergraduate thesis available at [BrennanDrake.github.io](https://BrennanDrake.github.io)
-- Previous research in autonomous robotics and sensor fusion
+### Phase 1: Basic Occupancy Grid Mapping COMPLETED
+**Goal:** Implement fundamental probabilistic mapping without localization
+**Duration:** 2-3 sessions (~6-9 hours)
 
 ## Hardware Platform
 
 ### Primary Test Platform
 - **Turtlebot 3** with custom LiDAR payload
 - Custom sensor configuration documented in portfolio
+- Code running on Turtlebot 3 is found at https://github.com/BrennanDrake/rfid_publisher
 
 ### Additional Sensors
 - **Intel RealSense D455** depth camera
@@ -69,20 +70,48 @@ This project represents a return to autonomous robotics and SLAM research, build
 - [ ] ROS 2 node subscribing to `/scan` topic (sensor_msgs/LaserScan)
 - [ ] Real-time occupancy grid generation (nav_msgs/OccupancyGrid)
 - [ ] Configurable grid parameters (resolution, size, update rates)
-- [ ] Visualization in RViz2
 
 **Key Topics**:
 - Input: `/scan` (sensor_msgs/LaserScan)
 - Output: `/map` (nav_msgs/OccupancyGrid)
 
-### Phase 2: Classical 2D SLAM
-**Goal**: Implement and compare established 2D LiDAR SLAM algorithms
+### Phase 2: Classical 2D SLAM (Hector SLAM)
+**Goal:** Implement complete Hector SLAM system with scan matching and pose estimation
+**Duration:** 6-10 sessions (~18-30 hours)
+
+#### Phase 2.1: Scan Matching Core COMPLETED
+**Duration:** 2 sessions (~4 hours)
+- Gauss-Newton optimization algorithm
+- Jacobian computation for pose derivatives  
+- Hessian matrix building and inversion
+- Pose covariance estimation
+- Match score quality assessment
+
+#### Phase 2.2: Map Management (NEXT)
+**Duration:** 1-2 sessions (~3-6 hours)
+- Multi-resolution occupancy grid implementation
+- Efficient map update algorithms
+- Integration with Phase 1 probabilistic mapping
+- Memory-efficient grid storage
+
+#### Phase 2.3: SLAM Integration
+**Duration:** 2-3 sessions (~6-9 hours)
+- Main HectorSlamProcessor node implementation
+- TF2 pose publishing and coordinate frame management
+- ROS 2 node wrapper and parameter handling
+- Integration of scan matching with map updates
+
+#### Phase 2.4: Testing & Validation
+**Duration:** 1-2 sessions (~3-6 hours)
+- Integration testing with Phase 1 occupancy grid data
+- Performance benchmarking and optimization
+- Real robot testing with TurtleBot3
+- Documentation and usage examples
 
 **Algorithms to Implement/Integrate**:
 1. **GMapping** (Rao-Blackwellized Particle Filter)
 2. **Hector SLAM** (scan matching without odometry)
 3. **Cartographer** (Google's real-time SLAM)
-4. **SLAM Toolbox** (Steve Macenski's modern approach)
 
 **Deliverables**:
 - [ ] Comparative analysis of algorithm performance
