@@ -11,7 +11,7 @@ Transition from classical SLAM to production visual SLAM using RTAB-Map with han
 sudo apt install ros-jazzy-rtabmap-ros
 ```
 
-**Your Task**: 
+**Your Task**:
 - Install and verify RTAB-Map
 - Test with sample bag file
 - Understand the ROS 2 interface
@@ -58,7 +58,7 @@ def detect_orb_features(image):
 - PnP (Perspective-n-Point)
 - Connection to EKF-SLAM you just learned
 
-**Quiz**: 
+**Quiz**:
 - How is visual odometry different from wheel odometry?
 - Why do we need depth (RGB-D) vs just RGB?
 
@@ -172,34 +172,34 @@ class SimpleFeatureMatcher:
     def __init__(self):
         self.orb = cv2.ORB_create(nfeatures=1000)
         self.bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        
+
     def match_frames(self, img1: np.ndarray, img2: np.ndarray) -> Tuple[List, List]:
         """
         TODO: Implement frame-to-frame matching
-        
+
         Steps:
         1. Detect ORB features in both images
         2. Match descriptors
         3. Filter matches (ratio test, RANSAC)
         4. Return good matches
-        
+
         Args:
             img1: First image
             img2: Second image
-            
+
         Returns:
             matched_kp1: Keypoints from img1
             matched_kp2: Corresponding keypoints from img2
         """
         # Your code here
         pass
-    
+
     def estimate_motion(self, kp1, kp2, K):
         """
         TODO: Estimate camera motion from matched features
-        
+
         Use cv2.findEssentialMat() and cv2.recoverPose()
-        
+
         Returns:
             R: Rotation matrix
             t: Translation vector
@@ -225,11 +225,11 @@ if __name__ == "__main__":
 1. **EKF-SLAM vs Visual SLAM**:
    - What are the key differences?
    - When would you use each?
-   
+
 2. **Scalability**:
    - EKF: O(n²) with landmarks
    - Visual: How does RTAB-Map handle thousands of features?
-   
+
 3. **Your Research**:
    - How could you add RFID landmarks to RTAB-Map?
    - Where would lifelong learning fit?

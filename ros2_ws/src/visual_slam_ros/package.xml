@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>visual_slam_ros</name>
+  <version>0.1.0</version>
+  <description>Phase 4: Visual SLAM with RTAB-Map and RealSense D455</description>
+  <maintainer email="81040749+BrennanDrake@users.noreply.github.com">Brennan Drake</maintainer>
+  <license>MIT</license>
+  
+  <author email="81040749+BrennanDrake@users.noreply.github.com">Brennan Drake</author>
+
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>cv_bridge</depend>
+  
+  <!-- Visual SLAM dependencies -->
+  <exec_depend>rtabmap_slam</exec_depend>
+  <exec_depend>rtabmap_viz</exec_depend>
+  <exec_depend>realsense2_camera</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
