@@ -19,6 +19,9 @@ def generate_launch_description():
     robot_x = LaunchConfiguration('robot_x', default='0.0')
     robot_y = LaunchConfiguration('robot_y', default='0.0')
     add_noise = LaunchConfiguration('add_noise', default='true')
+    use_odom = LaunchConfiguration('use_odom', default='true')
+    odom_lin = LaunchConfiguration('odom_lin', default='0.0')
+    odom_ang = LaunchConfiguration('odom_ang', default='0.0')
     
     ld = LaunchDescription()
     
@@ -43,6 +46,18 @@ def generate_launch_description():
         'add_noise', default_value='true',
         description='Add noise to scan data'))
     
+    ld.add_action(DeclareLaunchArgument(
+        'use_odom', default_value='true',
+        description='Enable EKF prediction using /odom'))
+
+    ld.add_action(DeclareLaunchArgument(
+        'odom_lin', default_value='0.0',
+        description='Odom simulator linear velocity (m/s)'))
+
+    ld.add_action(DeclareLaunchArgument(
+        'odom_ang', default_value='0.0',
+        description='Odom simulator angular velocity (rad/s)'))
+    
     # Log configuration
     ld.add_action(LogInfo(msg='==========================================='))
     ld.add_action(LogInfo(msg='Starting Hector SLAM with static environment'))
@@ -63,12 +78,27 @@ def generate_launch_description():
             'robot_x': robot_x,
             'robot_y': robot_y,
             'robot_theta': 0.0,
-            'add_noise': add_noise,
-            'noise_stddev': 0.01
+            'add_noise': False,
+            'noise_stddev': 0.0
         }]
     )
     
-    # 2. Hector SLAM processor
+    # 2. Odom simulator (publishes /odom)
+    odom_node = Node(
+        package='hector_slam_custom',
+        executable='odom_simulator',
+        name='odom_simulator',
+        output='screen',
+        parameters=[{
+            'frame_id': 'odom',
+            'child_frame_id': 'base_link',
+            'publish_rate': 20.0,
+            'linear_velocity': odom_lin,
+            'angular_velocity': odom_ang,
+        }]
+    )
+
+    # 3. Hector SLAM processor
     hector_slam_node = Node(
         package='hector_slam_custom',
         executable='hector_slam_custom_node',
@@ -86,18 +116,33 @@ def generate_launch_description():
             'pose_publish_rate': 20.0,
             
             # Scan matching parameters
-            'scan_match_threshold': 0.01,
-            'max_scan_match_iterations': 20,
+            'scan_match_threshold': 0.0005,
+            'max_scan_match_iterations': 40,
             
             # Map parameters
             'map_resolution': 0.05,  # 5cm per cell
             'map_size': 20.0,        # 20m x 20m (smaller for testing)
-            'map_update_distance_threshold': 0.1,  # Update more frequently
-            'map_update_angle_threshold': 0.1,     # radians
-        }]
+            'map_update_distance_threshold': 0.05,
+            'map_update_angle_threshold': 0.05,
+            
+            # Initial map building
+            'initial_scan_count': 20,  # Build map for N scans before scan matching
+            
+            # EKF/odom
+            'use_odom': use_odom,
+            'q_pos': 0.0005,
+            'q_theta': 0.0005,
+            'r_pos': 0.02,
+            'r_theta': 0.02,
+            'initial_cov_pos': 0.1,
+            'initial_cov_theta': 0.1,
+        }],
+        remappings=[
+            ('pose', 'slam_pose')
+        ]
     )
     
-    # 3. Static transform: base_link -> laser
+    # 4. Static transform: base_link -> laser
     static_tf_node = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -105,7 +150,7 @@ def generate_launch_description():
         arguments=['0', '0', '0.1', '0', '0', '0', 'base_link', 'laser']
     )
     
-    # 4. Monitor node (our custom monitor)
+    # 5. Monitor node (our custom monitor)
     monitor_node = Node(
         package='hector_slam_custom',
         executable='monitor_slam.py',
@@ -115,6 +160,7 @@ def generate_launch_description():
     
     # Add all nodes
     ld.add_action(static_scan_node)
+    ld.add_action(odom_node)
     ld.add_action(hector_slam_node)
     ld.add_action(static_tf_node)
     ld.add_action(monitor_node)

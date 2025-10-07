@@ -25,8 +25,9 @@ OccupancyGridLevel::OccupancyGridLevel(double resolution, int size_x, int size_y
     log_odds_grid_.resize(total_cells, 0.0);
     
     // Set occupancy update parameters (from Phase 1)
-    prob_hit_ = 0.7;
-    prob_miss_ = 0.4;
+    // Increased prob_hit for stronger occupied cell marking
+    prob_hit_ = 0.9;  // Was 0.7
+    prob_miss_ = 0.3;  // Was 0.4
     prob_prior_ = 0.5;
     log_odds_hit_ = std::log(prob_hit_ / (1.0 - prob_hit_));
     log_odds_miss_ = std::log(prob_miss_ / (1.0 - prob_miss_));
@@ -120,8 +121,8 @@ double OccupancyGridLevel::getOccupancyProbability(double world_x, double world_
 
 bool OccupancyGridLevel::worldToGrid(double world_x, double world_y, 
                                     int& grid_x, int& grid_y) const {
-    grid_x = static_cast<int>((world_x - origin_x_) / resolution_);
-    grid_y = static_cast<int>((world_y - origin_y_) / resolution_);
+    grid_x = static_cast<int>(std::lround((world_x - origin_x_) / resolution_));
+    grid_y = static_cast<int>(std::lround((world_y - origin_y_) / resolution_));
     
     return (grid_x >= 0 && grid_x < size_x_ && grid_y >= 0 && grid_y < size_y_);
 }
@@ -193,12 +194,15 @@ double OccupancyGridLevel::logOddsToProbability(double log_odds) const {
 }
 
 int8_t OccupancyGridLevel::probabilityToOccupancyValue(double probability) const {
-    if (probability < 0.25) {
-        return 0;  // Free
-    } else if (probability > 0.65) {
-        return 100;  // Occupied
+    // Convert probability to occupancy grid value
+    // Use continuous values for better scan matching gradients
+    if (std::abs(probability - 0.5) < 0.01) {
+        // Very close to prior = unknown
+        return -1;
     } else {
-        return -1;  // Unknown
+        // Scale probability to 0-100 range
+        // This preserves gradient information for scan matching
+        return static_cast<int8_t>(std::round(probability * 100));
     }
 }
 
@@ -211,7 +215,8 @@ MapManager::MapManager(double base_resolution, double map_size, int num_levels)
     for (int i = 0; i < num_levels_; ++i) {
         double level_resolution = base_resolution_ * std::pow(2.0, i);
         int grid_size = static_cast<int>(map_size_ / level_resolution);
-        double origin = -map_size_ / 2.0;
+        // Shift origin by half a cell so world (0,0) lands on a cell center
+        double origin = -map_size_ / 2.0 + level_resolution / 2.0;
         
         grid_levels_.emplace_back(
             std::make_unique<OccupancyGridLevel>(
@@ -261,7 +266,8 @@ void MapManager::reset() {
     for (int i = 0; i < num_levels_; ++i) {
         double level_resolution = base_resolution_ * std::pow(2.0, i);
         int grid_size = static_cast<int>(map_size_ / level_resolution);
-        double origin = -map_size_ / 2.0;
+        // Shift origin by half a cell so world (0,0) lands on a cell center
+        double origin = -map_size_ / 2.0 + level_resolution / 2.0;
         
         grid_levels_.emplace_back(
             std::make_unique<OccupancyGridLevel>(

@@ -1,18 +1,39 @@
 # Project-level ignores
 .direnv/
 
-# ROS 2 / colcon build artifacts (top-level)
+# ROS 2 / colcon build artifacts
 build/
 install/
 log/
+*/build/
+*/install/
+*/log/
+CMakeCache.txt
+CMakeFiles/
 
-# ROS 2 / colcon build artifacts (workspace-scoped)
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editor
+vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ROS specific
+.ros/
 ros2_ws/build/
 ros2_ws/install/
 ros2_ws/log/
 
-# ROS / colcon caches
-**/.colcon/**
+# Colcon
+colcon_ws/
+.colcon/
 **/.ros/**
 
 # Python caches (common when using ament_python)

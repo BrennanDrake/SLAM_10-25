@@ -17,6 +17,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 
 // Include native TF2 headers for Jazzy
@@ -38,6 +39,7 @@
 // Include our SLAM components
 #include "hector_slam_custom/scan_matcher.hpp"
 #include "hector_slam_custom/map_manager.hpp"
+#include "hector_slam_custom/ekf_filter.hpp"
 
 namespace hector_slam_custom {
 
@@ -87,6 +89,7 @@ private:
 
     // Subscribers
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_subscriber_;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
 
     // Publishers
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr map_publisher_;
@@ -109,6 +112,9 @@ private:
     std::unique_ptr<ScanMatcher> scan_matcher_;
     std::unique_ptr<MapManager> map_manager_;
 
+    // EKF for pose fusion (Phase 3)
+    EkfFilter ekf_;
+
     // =============================================================================
     // STATE VARIABLES
     // =============================================================================
@@ -129,9 +135,30 @@ private:
     // Scan processing state
     bool first_scan_received_ = false;
     rclcpp::Time last_scan_time_;
+    rclcpp::Time last_predict_time_;
     
     // Map state
     bool map_initialized_ = false;
+
+    // =============================================================================
+    // EKF / ODOMETRY PARAMETERS & STATE
+    // =============================================================================
+    bool use_odom_ = true;
+    double q_pos_ = 0.01;      // process noise for x,y
+    double q_theta_ = 0.01;    // process noise for theta
+    double r_pos_ = 0.05;      // measurement noise for x,y
+    double r_theta_ = 0.05;    // measurement noise for theta
+    double init_cov_pos_ = 0.1;   // initial covariance diag for x,y
+    double init_cov_theta_ = 0.1; // initial covariance diag for theta
+
+    // Latest odometry twist (v, omega) and timestamp
+    bool have_odom_ = false;
+    double odom_lin_vel_ = 0.0;   // m/s
+    double odom_ang_vel_ = 0.0;   // rad/s
+    rclcpp::Time last_odom_time_;
+    
+    // Scan counter for initial map building
+    int scan_count_ = 0;
     
     // =============================================================================
     // PARAMETERS
@@ -157,6 +184,9 @@ private:
     double map_update_distance_threshold_;
     double map_update_angle_threshold_;
     
+    // Initial map building
+    int initial_scan_count_;  // Number of scans to build map before scan matching
+    
     // =============================================================================
     // PRIVATE METHODS
     // =============================================================================
@@ -170,6 +200,11 @@ private:
      * @brief Initialize SLAM components (scan matcher, map manager)
      */
     void initializeSlamComponents();
+
+    /**
+     * @brief Odometry callback to store latest linear/angular velocities
+     */
+    void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
     
     /**
      * @brief Process a laser scan through the SLAM pipeline

@@ -1,0 +1,27 @@
+{
+  "project": "SLAM Learning Project",
+  "rules_file": ".cascade/rules.md",
+  "custom_instructions": {
+    "role": "Expert robotics professor specializing in SLAM",
+    "teaching_style": "Deep understanding through implementation",
+    "session_length": "3 hours",
+    "current_phase": "Phase 4: Visual SLAM"
+  },
+  "quick_commands": {
+    "build": "cd ros2_ws && colcon build --packages-select",
+    "test": "source install/setup.bash && ros2 launch",
+    "clean": "rm -rf build install log"
+  },
+  "key_paths": {
+    "workspace": "ros2_ws/",
+    "packages": "ros2_ws/src/",
+    "notes": "Notes/",
+    "current_package": "ros2_ws/src/ekf_slam/"
+  },
+  "preferences": {
+    "code_style": "educational_clarity",
+    "math_notation": "latex_compatible",
+    "debugging_verbosity": "high",
+    "example_style": "numerical_concrete"
+  }
+}

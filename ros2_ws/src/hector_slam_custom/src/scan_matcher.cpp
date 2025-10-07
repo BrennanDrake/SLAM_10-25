@@ -231,8 +231,8 @@ bool ScanMatcher::worldToGrid(const nav_msgs::msg::OccupancyGrid& grid,
                              double x, double y,
                              int& grid_x, int& grid_y) {
     
-    grid_x = static_cast<int>((x - grid.info.origin.position.x) / grid.info.resolution);
-    grid_y = static_cast<int>((y - grid.info.origin.position.y) / grid.info.resolution);
+    grid_x = static_cast<int>(std::lround((x - grid.info.origin.position.x) / grid.info.resolution));
+    grid_y = static_cast<int>(std::lround((y - grid.info.origin.position.y) / grid.info.resolution));
     
     return (grid_x >= 0 && grid_x < grid.info.width && grid_y >= 0 && grid_y < grid.info.height);
 }

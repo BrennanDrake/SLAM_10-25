@@ -36,6 +36,7 @@ add_library(${PROJECT_NAME}_lib
   src/scan_matcher.cpp
   src/map_manager.cpp
   src/hector_slam_processor.cpp
+  src/ekf_filter.cpp
 )
 
 target_include_directories(${PROJECT_NAME}_lib PUBLIC
@@ -80,6 +81,18 @@ ament_target_dependencies(static_scan_publisher
   tf2
 )
 
+# Create odometry simulator for testing EKF
+add_executable(odom_simulator
+  src/odom_simulator.cpp
+)
+
+ament_target_dependencies(odom_simulator
+  rclcpp
+  nav_msgs
+  tf2
+  tf2_geometry_msgs
+)
+
 # Create component library for composition (commented out until we implement HectorSlamProcessor)
 
 # Install targets
@@ -93,6 +106,7 @@ install(TARGETS
 install(TARGETS
   ${PROJECT_NAME}_node
   static_scan_publisher
+  odom_simulator
   DESTINATION lib/${PROJECT_NAME}
 )
 

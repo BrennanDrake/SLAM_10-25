@@ -5,29 +5,6 @@ trigger: always_on
 rules:
 
   #################################################################
-  # META: COACHING SUMMARY
-  #################################################################
-  meta:
-    - match: "\A(?!.*COACHING SUMMARY)"
-      prepend: |
-        ##############################################
-        # 📘 Coaching Summary
-        #
-        # General Practices:
-        # - Keep imports/modules clean and deduplicated
-        # - Document functions with concise docstrings / JSDoc
-        # - Use meaningful, minimal comments only
-        # - Handle errors with context (logging, not prints)
-        # - In HTML, ensure accessibility & meta hygiene
-        # - In CSS, prefer variables for theme consistency
-        #
-        # ⚠️ Reminder: These notes are for your growth;
-        # they won’t affect runtime or deployment.
-        ##############################################
-      explanation: "Adds a non-duplicating coaching summary at the top of each file."
-
-
-  #################################################################
   # PYTHON RULES
   #################################################################
   python:

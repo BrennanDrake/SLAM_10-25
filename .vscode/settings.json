@@ -1,0 +1,57 @@
+{
+  // C++ IntelliSense for ROS 2
+  "C_Cpp.default.includePath": [
+    "/opt/ros/jazzy/include/**",
+    "${workspaceFolder}/ros2_ws/install/*/include/**",
+    "${workspaceFolder}/ros2_ws/src/*/include/**",
+    "/usr/include/eigen3"
+  ],
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+  
+  // Python for ROS 2
+  "python.autoComplete.extraPaths": [
+    "/opt/ros/jazzy/lib/python3.12/site-packages",
+    "${workspaceFolder}/ros2_ws/install/*/lib/python3.12/site-packages"
+  ],
+  "python.analysis.extraPaths": [
+    "/opt/ros/jazzy/lib/python3.12/site-packages",
+    "${workspaceFolder}/ros2_ws/install/*/lib/python3.12/site-packages"
+  ],
+  
+  // File associations
+  "files.associations": {
+    "*.launch.py": "python",
+    "*.repos": "yaml",
+    "*.urdf": "xml",
+    "*.xacro": "xml",
+    "*.world": "xml"
+  },
+  
+  // Quick navigation
+  "workbench.editor.labelFormat": "medium",
+  "explorer.sortOrder": "type",
+  
+  // Terminal
+  "terminal.integrated.env.linux": {
+    "ROS_DOMAIN_ID": "0",
+    "ROS_VERSION": "2",
+    "ROS_PYTHON_VERSION": "3",
+    "ROS_DISTRO": "jazzy"
+  },
+  
+  // Tasks for quick building
+  "terminal.integrated.automationShell.linux": "/bin/bash",
+  
+  // Cascade/AI specific
+  "cascade.project.context": {
+    "type": "ROS2_SLAM",
+    "phase": "Phase_4_Visual_SLAM",
+    "rules": "${workspaceFolder}/.cascade/rules.md"
+  },
+  
+  // Editor
+  "editor.rulers": [100],
+  "editor.formatOnSave": false,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true
+}

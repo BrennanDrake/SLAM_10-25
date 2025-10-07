@@ -9,6 +9,7 @@
 #include "hector_slam_custom/hector_slam_processor.hpp"
 #include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <Eigen/Dense>
 #include <cmath>
 
 namespace hector_slam_custom {
@@ -32,6 +33,11 @@ HectorSlamProcessor::HectorSlamProcessor(const rclcpp::NodeOptions& options)
     scan_subscriber_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
         "scan", 10,
         std::bind(&HectorSlamProcessor::scanCallback, this, std::placeholders::_1));
+    
+    // Subscribe to odometry (wheel encoder or other) for motion prediction
+    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>(
+        "odom", 10,
+        std::bind(&HectorSlamProcessor::odomCallback, this, std::placeholders::_1));
     
     // Publish the map and robot pose
     map_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map", 10);
@@ -59,6 +65,10 @@ HectorSlamProcessor::HectorSlamProcessor(const rclcpp::NodeOptions& options)
     
     // TransformBroadcaster needs the node
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(this);
+    
+    // Initialize EKF process noise from parameters
+    ekf_.setProcessNoise(q_pos_, q_theta_);
+    last_predict_time_ = this->now();
     
     RCLCPP_INFO(this->get_logger(), "Hector SLAM Processor initialized successfully");
 }
@@ -93,21 +103,42 @@ void HectorSlamProcessor::initializeParameters() {
     
     // Scan matching parameters
     this->declare_parameter("scan_match_threshold", 0.01);  // Convergence threshold
-    this->declare_parameter("max_scan_match_iterations", 20);
+    this->declare_parameter("max_scan_match_iterations", 10);  // Max iterations
     
     scan_match_threshold_ = this->get_parameter("scan_match_threshold").as_double();
     max_scan_match_iterations_ = this->get_parameter("max_scan_match_iterations").as_int();
     
     // Map parameters
-    this->declare_parameter("map_resolution", 0.05);     // 5cm per grid cell
-    this->declare_parameter("map_size", 100.0);          // 100m x 100m world
-    this->declare_parameter("map_update_distance_threshold", 0.4);  // meters
-    this->declare_parameter("map_update_angle_threshold", 0.2);     // radians
+    this->declare_parameter("map_resolution", 0.05);
+    this->declare_parameter("map_size", 20.0);
+    this->declare_parameter("map_update_distance_threshold", 0.4);
+    this->declare_parameter("map_update_angle_threshold", 0.2);
+    
+    // Initial map building
+    this->declare_parameter("initial_scan_count", 5);
     
     map_resolution_ = this->get_parameter("map_resolution").as_double();
     map_size_ = this->get_parameter("map_size").as_double();
     map_update_distance_threshold_ = this->get_parameter("map_update_distance_threshold").as_double();
     map_update_angle_threshold_ = this->get_parameter("map_update_angle_threshold").as_double();
+    initial_scan_count_ = this->get_parameter("initial_scan_count").as_int();
+    
+    // EKF / Odometry parameters (Phase 3)
+    this->declare_parameter("use_odom", true);
+    this->declare_parameter("q_pos", 0.01);
+    this->declare_parameter("q_theta", 0.01);
+    this->declare_parameter("r_pos", 0.05);
+    this->declare_parameter("r_theta", 0.05);
+    this->declare_parameter("initial_cov_pos", 0.1);
+    this->declare_parameter("initial_cov_theta", 0.1);
+
+    use_odom_ = this->get_parameter("use_odom").as_bool();
+    q_pos_ = this->get_parameter("q_pos").as_double();
+    q_theta_ = this->get_parameter("q_theta").as_double();
+    r_pos_ = this->get_parameter("r_pos").as_double();
+    r_theta_ = this->get_parameter("r_theta").as_double();
+    init_cov_pos_ = this->get_parameter("initial_cov_pos").as_double();
+    init_cov_theta_ = this->get_parameter("initial_cov_theta").as_double();
     
     RCLCPP_INFO(this->get_logger(), "Parameters loaded: resolution=%.3fm, map_size=%.1fm", 
                 map_resolution_, map_size_);
@@ -159,7 +190,33 @@ void HectorSlamProcessor::scanCallback(const sensor_msgs::msg::LaserScan::Shared
         // This populates the map so scan matching has something to match against
         updateMap(scan, current_pose_);
         
+        // Log map origin and robot pose for debugging
+        nav_msgs::msg::OccupancyGrid debug_map = map_manager_->getFinestOccupancyGrid(map_frame_);
+        const auto &origin = debug_map.info.origin.position;
+        RCLCPP_INFO(this->get_logger(), "[DEBUG] Map origin: (%.3f, %.3f), Robot initial pose: (%.3f, %.3f, %.3f)",
+            origin.x, origin.y, current_pose_.x, current_pose_.y, current_pose_.theta);
+        
+        // Initialize EKF state and covariance from current pose
+        Eigen::Vector3d x0(current_pose_.x, current_pose_.y, current_pose_.theta);
+        Eigen::Matrix3d P0 = Eigen::Matrix3d::Zero();
+        P0(0,0) = init_cov_pos_;
+        P0(1,1) = init_cov_pos_;
+        P0(2,2) = init_cov_theta_;
+        ekf_.initialize(x0, P0);
+        ekf_.setProcessNoise(q_pos_, q_theta_);
+        last_predict_time_ = scan->header.stamp;
+        
         RCLCPP_INFO(this->get_logger(), "Initial map created from first scan");
+        scan_count_++;
+        return;
+    }
+    
+    // For the first few scans, just update the map without scan matching
+    // This builds up enough map content for scan matching to work
+    if (scan_count_ < initial_scan_count_) {
+        updateMap(scan, current_pose_);
+        scan_count_++;
+        RCLCPP_INFO(this->get_logger(), "Building initial map... scan %d/%d", scan_count_, initial_scan_count_);
         return;
     }
     
@@ -173,8 +230,45 @@ void HectorSlamProcessor::scanCallback(const sensor_msgs::msg::LaserScan::Shared
 // PROCESS SCAN - The SLAM Pipeline
 // ============================================================================
 bool HectorSlamProcessor::processScan(const sensor_msgs::msg::LaserScan::SharedPtr scan) {
-    // Step 1: Perform scan matching to find where we are
-    RobotPose new_pose = performScanMatching(scan, current_pose_);
+    // Step 0: EKF predict using latest odometry
+    if (use_odom_ && have_odom_) {
+        // Use scan timestamp to compute dt for predict
+        rclcpp::Time now_t = scan->header.stamp;
+        double dt = (now_t - last_predict_time_).seconds();
+        if (dt > 0.0) {
+            ekf_.predict(odom_lin_vel_, odom_ang_vel_, dt);
+            last_predict_time_ = now_t;
+        }
+    }
+
+    // Predicted pose from EKF (before correction)
+    Eigen::Vector3d x_pred = ekf_.getState();
+    RobotPose pred_pose;
+    pred_pose.x = x_pred(0);
+    pred_pose.y = x_pred(1);
+    pred_pose.theta = x_pred(2);
+
+    // Step 1: Perform scan matching starting from predicted pose
+    RobotPose scanmatch_pose = performScanMatching(scan, pred_pose);
+
+    // Step 2: EKF measurement update with scan-matching result (if converged)
+    Eigen::Vector3d z;
+    z << scanmatch_pose.x, scanmatch_pose.y, scanmatch_pose.theta;
+    Eigen::Matrix3d R = Eigen::Matrix3d::Zero();
+    R(0,0) = r_pos_;
+    R(1,1) = r_pos_;
+    R(2,2) = r_theta_;
+
+    // Determine if the last scan matching converged by comparing to pred (simple check: rely on pose change rate)
+    // Here we always attempt update; performScanMatching already falls back to initial pose when not converged
+    ekf_.update(z, R);
+
+    // Step 3: Use fused EKF state as the new pose
+    Eigen::Vector3d x_fused = ekf_.getState();
+    RobotPose new_pose;
+    new_pose.x = x_fused(0);
+    new_pose.y = x_fused(1);
+    new_pose.theta = x_fused(2);
     
     // Step 2: Check if we've moved enough to update the map
     if (shouldUpdateMap(new_pose, last_scan_match_pose_)) {
@@ -187,6 +281,17 @@ bool HectorSlamProcessor::processScan(const sensor_msgs::msg::LaserScan::SharedP
     current_pose_.timestamp = scan->header.stamp;
     
     return true;
+}
+
+// ============================================================================
+// ODOMETRY CALLBACK - Store latest v and omega
+// ============================================================================
+void HectorSlamProcessor::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
+    // Extract linear velocity along x and angular velocity around z
+    odom_lin_vel_ = msg->twist.twist.linear.x;
+    odom_ang_vel_ = msg->twist.twist.angular.z;
+    have_odom_ = true;
+    last_odom_time_ = msg->header.stamp;
 }
 
 // ============================================================================
@@ -237,18 +342,37 @@ HectorSlamProcessor::RobotPose HectorSlamProcessor::performScanMatching(
     corrected_pose.y = result.corrected_pose.y;
     corrected_pose.theta = result.corrected_pose.theta;
     
-    if (result.converged) {
+    // Log detailed info about scan matching result
+    RCLCPP_INFO_THROTTLE(this->get_logger(), 
+                        *this->get_clock(), 
+                        2000,  // Every 2 seconds
+                        "Scan match: converged=%s, score=%.3f, iterations=%d, pose=(%.2f, %.2f, %.2f)",
+                        result.converged ? "true" : "false",
+                        result.match_score, result.iterations_used,
+                        result.corrected_pose.x, result.corrected_pose.y, result.corrected_pose.theta);
+    
+    // Accept scan match if it converged with reasonable score
+    // Lower threshold since we're in a static environment with good map
+    if (result.converged && result.match_score > 0.1) {  // Lowered from 0.3
         RCLCPP_DEBUG(this->get_logger(), 
                     "Scan matching converged: score=%.3f, iterations=%d",
                     result.match_score, result.iterations_used);
     } else {
         // Scan matching failed - use the initial pose (no correction)
         // This is common when the map is sparse or the robot hasn't moved much
-        RCLCPP_WARN_THROTTLE(this->get_logger(), 
-                            *this->get_clock(), 
-                            1000,  // Only warn once per second
-                            "Scan matching did not converge (score=%.3f), using prediction",
-                            result.match_score);
+        if (!result.converged) {
+            RCLCPP_WARN_THROTTLE(this->get_logger(), 
+                                *this->get_clock(), 
+                                1000,  // Only warn once per second
+                                "Scan matching did not converge (score=%.3f), using prediction",
+                                result.match_score);
+        } else {
+            RCLCPP_WARN_THROTTLE(this->get_logger(), 
+                                *this->get_clock(), 
+                                1000,  // Only warn once per second
+                                "Scan matching converged but score too low (%.3f < 0.1), using prediction",
+                                result.match_score);
+        }
         
         // Still update the map even if scan matching failed
         // This helps populate the map for future matching
